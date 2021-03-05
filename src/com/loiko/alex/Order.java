@@ -1,40 +1,26 @@
 package com.loiko.alex;
 
+import com.opencsv.bean.CsvBindByPosition;
+import lombok.Builder;
+import lombok.Getter;
+
 import java.time.LocalDate;
 import java.util.List;
 
+@Getter
+@Builder
 public class Order {
 
-    private int id;
-    private LocalDate dateOrder;
-    private List<Good> goods;
+    @CsvBindByPosition(position = 0)
+    private String id;
 
-    public Order(int id, LocalDate dateOrder) {
+    @CsvBindByPosition(position = 1)
+    private LocalDate dateTime;
+
+    private List<Product> products;
+
+    public Order(String id, LocalDate dateTime) {
         this.id = id;
-        this.dateOrder = dateOrder;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public LocalDate getDateOrder() {
-        return dateOrder;
-    }
-
-    public void setDateOrder(LocalDate dateOrder) {
-        this.dateOrder = dateOrder;
-    }
-
-    public List<Good> getGoods() {
-        return goods;
-    }
-
-    public void setGoods(List<Good> goods) {
-        this.goods = goods;
+        this.dateTime = dateTime;
     }
 }

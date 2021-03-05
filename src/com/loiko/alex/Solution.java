@@ -2,7 +2,9 @@ package com.loiko.alex;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Solution {
 
@@ -11,10 +13,11 @@ public class Solution {
         System.out.println(findMaxProfit(day));
     }
 
-    public static Good findMaxProfit(LocalDate dateOrder) {
-        List<Good> orders = new ArrayList<>();
-        return orders.stream()
-                .max(g -> g.getPrice() * g.getAmount())
-                .get();
+    public static Product findMaxProfit(LocalDate dateOrder) {
+        List<Product> orders = new ArrayList<>();
+        List<Product> good = orders.stream()
+                .sorted(Comparator.comparing((g -> g.getAmount() * g.getPrice())))
+                .collect(Collectors.toList());
+        return good.get(good.size()-1);
     }
 }
