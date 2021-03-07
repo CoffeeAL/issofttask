@@ -3,8 +3,6 @@ package com.loiko.alex;
 import com.opencsv.bean.CsvBindByPosition;
 import lombok.*;
 
-import java.time.LocalDate;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
