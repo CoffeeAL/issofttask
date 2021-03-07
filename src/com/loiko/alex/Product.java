@@ -1,13 +1,14 @@
 package com.loiko.alex;
 
 import com.opencsv.bean.CsvBindByPosition;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter
+@Setter
+@ToString
 public class Product {
 
     @CsvBindByPosition(position = 0)
@@ -17,5 +18,5 @@ public class Product {
     private String name;
 
     @CsvBindByPosition(position = 2)
-    private int pricePerUnit;
+    private String pricePerUnit;
 }
