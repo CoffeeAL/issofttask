@@ -1,17 +1,12 @@
 package com.loiko.alex;
 
-import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBeanBuilder;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Solution {
@@ -22,113 +17,108 @@ public class Solution {
         final String ordersFileName = "resources/orders.csv";
         LocalDate day = LocalDate.of(2021, 01, 21);
 
-        CSVReader productsReader = new CSVReader(new FileReader(productsFileName));
-        CSVReader orderItemsReader = new CSVReader(new FileReader(orderItemsFileName));
-        CSVReader ordersReader = new CSVReader(new FileReader(ordersFileName));
-
         List<Product> products = new CsvToBeanBuilder(new FileReader(productsFileName))
                 .withType(Product.class)
                 .build()
                 .parse();
         products.remove(0);
-//        Integer i = Integer.valueOf(products.get(0).getPricePerUnit());
+        System.out.println("List of products has " + products.size() + " elements, including:");
+//        products.forEach(System.out::println);
+        printSeparator();
 
         List<OrderItem> orderItems = new CsvToBeanBuilder(new FileReader(orderItemsFileName))
                 .withType(OrderItem.class)
                 .build()
                 .parse();
         orderItems.remove(0);
+        System.out.println("List of items has " + orderItems.size() + " elements, including:");
 //        orderItems.forEach(System.out::println);
+        printSeparator();
 
         List<Order> orders = new CsvToBeanBuilder(new FileReader(ordersFileName))
                 .withType(Order.class)
                 .build()
                 .parse();
         orders.remove(0);
+        System.out.println("List of orders has " + orders.size() + " elements, including:");
+//        orders.forEach(System.out::println);
+        printSeparator();
 
         List<Order> ordersRequiredByDate =
-                ordersFromRequiredDate(orders, LocalDate.of(2021, 01,21));
-        ordersRequiredByDate.forEach(System.out::println);
+                findOrdersFromRequiredDate(orders, day);
+        System.out.println("Total orders from required date: " + ordersRequiredByDate.size() + ", including:");
+//        ordersRequiredByDate.forEach(System.out::println);
+        printSeparator();
 
-        //  OrderId  Date
-//        Map<String, Date> ordersAndDates = new HashMap<>();
-//        for (Order order : orders) {
-//            String dateString = order.getDateTime();
-//            SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
-//            Date docDate = format.parse(dateString);
-//            ordersAndDates.put(order.getId(), docDate);
-//        }
-//
-//        List<Dto> dtoList = new ArrayList<>();
+        List<OrderItem> orderItemList = findItemsFromRequiredOrders(ordersRequiredByDate, orderItems);
+        System.out.println("Total items from required orders: " + orderItemList.size() + ", including:");
+        orderItemList.forEach(System.out::println);
+        printSeparator();
 
-
-//        for (OrderItem orderItem : orderItems) {
-//            String date = null;
-//            String orderId = orderItem.getOrderId();
-//            String productId = orderItem.getProductId();
-//            String pricePerUnit = null;
-//            String quantity = null;
-//            Integer profit = Integer.valueOf(pricePerUnit) * Integer.valueOf(quantity);
-//            String profitAsString = profit.toString();
-//            dtoList.add(new Dto(date, orderId, productId, pricePerUnit, quantity, profitAsString));
-//        }
-//        List<Product> products214 = parseProductCsv(productsFileName);
+        System.out.println(findMaxProfit(orderItemList, products));
     }
-//
-//    public static Product findMaxProfit(LocalDate dateOrder) {
-//        List<Product> orders = new ArrayList<>();
-//        List<Product> good = orders.stream()
-//                .sorted(Comparator.comparing((g -> g.getAmount() * g.getPrice())))
-//                .collect(Collectors.toList());
-//        return good.get(good.size()-1);
-//    }
 
-    private static List<Order> ordersFromRequiredDate(List<Order> orders, LocalDate date) throws ParseException {
-        List<Order> result = new ArrayList<>();
-        for (Order order : orders) {
-            String dateString = order.getDateTime();
-            LocalDateTime localDateTime = LocalDateTime.parse(dateString);
-            LocalDate ld = localDateTime.toLocalDate();
-            if(ld.equals(date)) {
-                result.add(order);
+    private static void printSeparator() {
+        System.out.println("********************************************");
+    }
+
+    private static List<OrderItem> findItemsFromRequiredOrders(List<Order> orders, List<OrderItem> items) {
+        List<OrderItem> result = new ArrayList<>();
+        //TODO use streams
+        for (OrderItem orderItem : items) {
+            for (Order order : orders) {
+                if (orderItem.getOrderId().equals(order.getId())) {
+                    result.add(OrderItem.builder()
+                            .orderId(order.getId())
+                            .productId(orderItem.getProductId())
+                            .quantity(orderItem.getQuantity())
+                            .build());
+                }
             }
         }
         return result;
     }
 
-    private static List<Product> parseProductCsv(String filePath) throws IOException {
-        List<Product> products = new ArrayList<>();
-        List<String> fileLines = Files.readAllLines(Paths.get(filePath));
-        for (String fileLine : fileLines) {
-            String[] splitedText = fileLine.split(",");
-            List<String> columnList = new ArrayList<>();
-            for (int i = 0; i < splitedText.length; i++) {
-                if (isColumnPart(splitedText[i])) {
-                    String lastText = columnList.get(columnList.size() - 1);
-                    columnList.set(columnList.size() - 1, lastText + "," + splitedText[i]);
-                } else {
-                    columnList.add(splitedText[i]);
+    public static Product findMaxProfit(List<OrderItem> items, List<Product> products) {
+        List<Dto> resultDtoList = new ArrayList<>();
+        for (OrderItem item : items) {
+            for (Product product : products) {
+                if (item.getProductId().equals(product.getId())) {
+                    Long profit = Long.valueOf(item.getQuantity()) * Long.valueOf(product.getPricePerUnit());
+                    resultDtoList.add(Dto.builder()
+                            .productId(item.getProductId())
+                            .pricePerUnit(product.getPricePerUnit())
+                            .quantity(item.getQuantity())
+                            .profit(profit)
+                            .build());
                 }
             }
-            Product product = new Product();
-            int pricePerUnit = 0;
-            try {
-                pricePerUnit = Integer.valueOf(columnList.get(2));
-                product.builder()
-                        .id(columnList.get(0))
-                        .name(columnList.get(1))
-                        .pricePerUnit(columnList.get(2))
-                        .build();
-                products.add(product);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
+        }
+        //TODO use Optional or List
+        Product productResult = null;
+        String maxProfitProductId = resultDtoList.stream()
+                .max(Comparator.comparing(Dto::getProfit)).get().getProductId();
+        for (Product product : products) {
+            if(product.getId().equals(maxProfitProductId)) {
+                productResult = product;
             }
         }
-        return products;
+        System.out.println("Max profit is: " + resultDtoList.stream()
+                .max(Comparator.comparing(Dto::getProfit)).get().getProfit() + " from:");
+        return productResult;
     }
 
-    private static boolean isColumnPart(String text) {
-        String trimText = text.trim();
-        return trimText.indexOf("\"") == trimText.lastIndexOf("\"") && trimText.endsWith("\"");
+    private static List<Order> findOrdersFromRequiredDate(List<Order> orders, LocalDate date) {
+        List<Order> result = new ArrayList<>();
+        //TODO use streams
+        for (Order order : orders) {
+            String dateString = order.getDateTime();
+            LocalDateTime localDateTime = LocalDateTime.parse(dateString);
+            LocalDate ld = localDateTime.toLocalDate();
+            if (ld.equals(date)) {
+                result.add(order);
+            }
+        }
+        return result;
     }
 }
